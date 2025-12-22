@@ -117,44 +117,44 @@ This section of the pipeline is unchanged from the original workflow and operate
 
 ### Analysis steps
 
-10. **Setup and data preparation**  
+1. **Setup and data preparation**  
     - Load count data, gene lengths, and metadata.  
     - Harmonize sample IDs and ensure consistent trait encoding.
 
-11. **Normalization and quality control**  
+2. **Normalization and quality control**  
     - Apply DESeq2 VST normalization.  
     - Perform sample QC and remove outliers as needed.
 
-12. **Network construction and module detection (WGCNA)**  
+3. **Network construction and module detection (WGCNA)**  
     - Construct a weighted gene co-expression network.  
     - Detect gene modules (clusters of co-expressed genes).
 
-13. **Module–trait relationships**  
+4. **Module–trait relationships**  
     - Correlate module eigengenes with experimental traits (e.g., condition, sex, phenotypes).  
     - Identify modules associated with exposure or developmental outcomes.
 
-14. **Gene ontology enrichment**  
+5. **Gene ontology enrichment**  
     - Perform GO or pathway enrichment on modules of interest.  
     - Summarize biological processes and pathways represented by key modules.
 
-15. **Hub gene identification and validation**  
+6. **Hub gene identification and validation**  
     - Identify hub genes within selected modules based on connectivity and module membership.  
     - Optionally validate hub genes using external datasets or literature.
 
-16. **Network visualization**  
+7. **Network visualization**  
     - Visualize specific modules (e.g., a “green” module) using network plotting tools or Cytoscape-compatible exports.
 
-17. **Cell-type enrichment analysis**  
+8. **Cell-type enrichment analysis**  
     - Test for enrichment of module genes in cell-type–specific signatures to infer cellular context.
 
-18. **Single-cell RNA-seq deconvolution signature preparation**  
+9. **Single-cell RNA-seq deconvolution signature preparation**  
     - Generate bulk deconvolution signatures from single-cell reference data.  
     - Format signatures for CIBERSORTx or similar deconvolution tools.
 
-19. **Seurat marker gene identification (optional)**  
+10. **Seurat marker gene identification (optional)**  
     - Identify marker genes from single-cell or single-nucleus datasets using Seurat, when applicable.
 
-20. **CIBERSORTx deconvolution (SLURM)**  
+11. **CIBERSORTx deconvolution (SLURM)**  
     - Provide a SLURM batch script and input templates for running CIBERSORTx on HPC.  
     - Estimate cell-type proportions in bulk RNA-seq samples and integrate these with module-level results.
 
