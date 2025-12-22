@@ -1,4 +1,4 @@
-This repository documents a unified, publication-ready bioinformatic workflow to analyze developmental reprogramming in heat-exposed embryos using bulk RNA-sequencing, including differential expression, co-expression network analysis, cell-type deconvolution, and alternative splicing/isoform usage analysis.
+This repository documents a unified bioinformatic workflow to analyze developmental reprogramming in heat-exposed embryos using bulk RNA-sequencing, including differential expression, co-expression network analysis, cell-type deconvolution, and alternative splicing/isoform usage analysis.
 
 ***
 
