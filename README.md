@@ -1,126 +1,201 @@
-# Bioinformatic Pipeline for Analyzing Development Reprogramming in Heat Call Exposed Embryos
+This repository documents a unified, publication-ready bioinformatic workflow to analyze developmental reprogramming in heat-exposed embryos using bulk RNA-sequencing, including differential expression, co-expression network analysis, and cell-type deconvolution, with all RRBS/DNA methylation components removed.
 
-## Epigenetic Reprogramming Analysis: Complete and Annotated Workflow
+***
 
-**This pipeline is designed for robust, reproducible analysis of RRBS and RNA-seq data, integrating advanced normalization, network analysis, differential methylation, differential gene expression, gene set enrichment, and cell-type deconvolution in a single workflow.**
+## Overview
 
----
+This code base supports three **integrated** RNA-seq analysis streams:
 
-## Pipeline Overview
+- A **global DESeq2 differential expression pipeline** for bulk RNA-seq.  
+- A **targeted hypothalamus DESeq2 pipeline** for an a priori gene set.  
+- An **RNA-sequencing co-expression network and deconvolution pipeline**, including WGCNA, module–trait relationships, enrichment, and CIBERSORTx-based deconvolution, which remains unchanged from the original workflow.
 
-### 1. Setup and Data Preparation
-- **Input:** Raw RRBS methylation files, sample metadata  
-- **Tasks:** Load packages, set working directory, load sample metadata, prepare methylation file lists
+The repository is designed to accompany a high-impact journal publication and public data deposition (e.g., GEO/SRA), with emphasis on transparency, reproducibility, and clear separation between global and targeted RNA-seq analyses.
 
-### 2. Data Import and Preprocessing
-- **Tools:** `methylKit`, `tidyverse`, `dplyr`  
-- **Tasks:** Import methylation data, add sample-specific covariates (e.g., sex), filter samples based on availability
+***
 
-### 3. Quality Control and Filtering
-- **Tasks:** Visualize methylation and coverage statistics for all samples, filter samples by coverage to ensure data quality
+## A. Global RNA-seq differential expression (DESeq2)
 
-### 4. Differential Methylation Analysis
-- **Tasks:** Merge samples, perform differential methylation analysis (including sex as a covariate), extract significantly differentially methylated CpGs, analyze treatment effects separately for males and females
+This component provides a robust, end-to-end DESeq2 analysis for bulk RNA-seq (medial punch) data using Salmon quantifications as input.
 
-### 5. Summary and Comparison
-- **Tasks:** Summarize and compare differential methylation results across sexes, report overlap of differentially methylated CpGs
+### Inputs
 
-### 6. Gene Annotation
-- **Tools:** `GenomicRanges`  
-- **Tasks:** Annotate differentially methylated CpGs with gene information using genomic coordinates, save annotated results for manual review
+- **Quantifications**  
+  - `quants/` directory with one subdirectory per sample (e.g., `Sample01_quant/`), each containing `quant.sf` from Salmon.
+- **Transcript–gene mapping**  
+  - `tx_id.txt`: vector of transcript IDs.  
+  - `gene_id.txt`: parallel vector of gene IDs used to construct `tx2gene`.
+- **Sample metadata**  
+  - `sampleInfo.csv` (or `sampleInfo_2.csv`) with at least:
+    - `SampleID` (or first column): matches sample identifiers in `quants/`.  
+    - `condition`: experimental group (e.g., control vs heat/treatment).  
+    - `sex`: biological sex.
 
-### 7. Interaction Analysis (Sex × Treatment)
-- **Tasks:** Create interaction factors, re-analyze methylation data for interaction effects, perform pairwise comparisons between treatment groups, annotate and summarize results
+### Core script
 
-### 8. Additional Analyses and Visualization
-- **Tasks:** Load and analyze specific methylation files, generate publication-ready boxplots and interaction plots for selected regions
+- `global_rnaseq_deseq2_pipeline.R`  
+  This script implements the global DESeq2 workflow and is written to be path-agnostic (no user-specific directories) and safe for repeated, automated runs (timestamped, no-overwrite).
 
-### 9. Gene Ontology (GO) Enrichment Analysis
-- **Tools:** `goseq`, `geneLenDataBase`, `org.Gg.eg.db`  
-- **Tasks:** Prepare gene universe for GO analysis, perform enrichment analysis, visualize top enriched GO terms
+### Analysis steps
 
----
+1. **Import and harmonization**  
+   - Builds a transcript-to-gene mapping (`tx2gene`) from `tx_id.txt` and `gene_id.txt`.  
+   - Aggregates Salmon-level quantifications to gene level with `tximport`.  
+   - Cleans and matches sample IDs between `quants/` and `sampleInfo`, including handling legacy prefixes and zero-padding where needed.
 
-## RNA-Sequencing Analysis (Co-Expression Network and Deconvolution)
+2. **DESeq2 modeling**  
+   - Constructs a `DESeqDataSet` with design `~ sex + condition`.  
+   - Filters low-count genes and fits the treatment model using DESeq2.  
+   - Performs a likelihood ratio test (LRT) for the condition effect with reduced model `~ sex` for robust assessment of treatment-associated expression changes.
 
-### 10. Setup and Data Preparation
-- **Input:** Raw RNA-seq count data  
-- **Tasks:** Load data, process gene length information, prepare metadata
+3. **Log2 fold-change shrinkage and ranking**  
+   - Identifies the appropriate `condition_*` contrast from `resultsNames`.  
+   - Performs log2 fold-change shrinkage using `apeglm`, generating a ranked table of genes suitable for effect size reporting and downstream interpretation.
 
-### 11. Normalization and Quality Control
-- **Tools:** DESeq2 VST normalization  
-- **Tasks:** Normalize counts, perform sample QC, filter outliers
+4. **Quality control and visualization**  
+   - Generates a volcano plot of treatment vs control, highlighting a small, well-defined set of labeled genes (top up- and down-regulated).  
+   - Computes a variance-stabilizing transformation (VST), PCA plot (colored by condition and sex), and a scree plot of principal components.
 
-### 12. Network Construction and Module Detection
-- **Tools:** WGCNA  
-- **Tasks:** Construct co-expression network, detect gene modules
+5. **Outputs (publication and GEO-ready)**  
+   - Gene-level matrices: raw counts, DESeq2-normalized counts, and VST expression.  
+   - Sample metadata aligned to matrix columns.  
+   - Global DESeq2 result tables: unshrunken (full statistics) and shrunken (effect sizes).  
+   - Optional per-sample CSV files for each data type (raw, normalized, VST), with informative filenames encoding condition, sex, and replicate.
 
-### 13. Module-Trait Relationships
-- **Tasks:** Correlate modules with clinical/experimental traits
+All outputs are written to an `outputs/` directory, with automatic timestamping to prevent overwriting previous runs.
 
-### 14. Gene Ontology Enrichment
-- **Tasks:** Enrichment analysis for detected modules
+***
 
-### 15. Hub Gene Identification and Validation
-- **Tasks:** Identify and validate hub genes within modules
+## B. Targeted hypothalamus gene-set DESeq2 analysis
 
-### 16. Network Visualization (Green Module)
-- **Tasks:** Visualize the co-expression network for selected module(s)
+This component provides a focused DESeq2 analysis restricted to a **predefined hypothalamus gene list**, allowing rigorous hypothesis-driven testing within an a priori gene set.
 
-### 17. Cell-Type Enrichment Analysis
-- **Tasks:** Assess module enrichment for specific cell types
+### Inputs
 
-### 18. Single-Cell RNA-seq Deconvolution Signature Preparation
-- **Tasks:** Prepare signatures for deconvolution using single-cell data
+In addition to the inputs used for the global pipeline:
 
-### 19. Seurat Marker Gene Identification
-- **Tasks:** Identify marker genes using Seurat (if applicable)
+- `DeSeq2_hypothalamus_genes.csv`  
+  - Single-column CSV with header `gene`, containing hypothalamus candidate genes (symbols or IDs).  
+  - This list defines the targeted analysis universe and is derived independently from the bulk RNA-seq data.
 
-### 20. SLURM Batch Script for CIBERSORTx Deconvolution
-- **Tasks:** Run CIBERSORTx deconvolution on HPC using provided SLURM script
+### Core script
 
-## RNA-Seq Differential Expression and Gene Set Enrichment Pipeline
+- `targeted_hypothalamus_deseq2_pipeline.R`  
+  This script reuses the same quantifications and metadata cleaning logic as the global pipeline but restricts analysis to the hypothalamus gene set.
 
-### 21. Setup and Data Preparation
-**Input:**  
-Raw RNA-seq quantification files (Salmon output), sample metadata, transcript-to-gene mapping files, gene set files (Hallmark, KEGG, GO), hypothalamic gene list (optional)
+### Analysis steps
 
-**Tasks:**
-- Load required R packages  
-- Set up working directory (not hard-coded for reproducibility)  
-- Load sample metadata and prepare sample information  
-- Prepare transcript-to-gene mapping files  
-- Prepare gene set files for enrichment analysis
+1. **Re-import and metadata harmonization**  
+   - Uses `tximport` to re-import gene-level counts.  
+   - Cleans and matches sample IDs exactly as in the global pipeline, enforcing consistent handling of `condition` and `sex`.
 
-### 22. Data Import and Preprocessing
-**Tools:**  
-`tximport`, `DESeq2`, `limma`, `qusage`, `dplyr`, `tibble`, `readr`, `ggplot2`, `apeglm`, `ggsci`
+2. **Construction of treatment model**  
+   - Builds a `DESeqDataSet` with design `~ sex + condition`.  
+   - Filters low-count genes prior to restriction to the hypothalamus list.
 
-**Tasks:**
-- Import RNA-seq quantification data using tximport  
-- Combine sample metadata with quantification data  
-- Prepare sample information for differential expression analysis  
-- Optionally filter gene list for tissue-specific (e.g., hypothalamic) analysis
+3. **Gene-set restriction and testing**  
+   - Restricts the DESeq2 object to genes present both in the dataset and in `DeSeq2_hypothalamus_genes.csv`.  
+   - Performs DESeq2 with `alpha = 0.05`, yielding unshrunken Wald statistics, followed by `apeglm`-based shrinkage of log2 fold changes.  
+   - Summarizes the number and direction of significantly altered hypothalamus genes.
 
-### 23. Differential Expression Analysis
-**Tasks:**
-- Construct DESeq2 object from imported data  
-- Filter low-count genes  
-- Perform differential expression analysis with DESeq2  
-- Extract and shrink log2 fold changes for robust gene ranking  
-- Save results for downstream analysis
+4. **Outputs for figures and supplements**  
+   - Timestamped CSV and RDS files for unshrunken results and shrunken LFCs.  
+   - Volcano plots for the hypothalamus gene set, using combined FDR and fold-change thresholds.  
+   - Rank files and combined tables suitable as supplementary resources in the manuscript (unshrunken statistics plus shrunken effect sizes).
 
-### 24. Gene Set Enrichment Analysis
-**Tasks:**
-- Load gene set files (Hallmark, KEGG, GO)  
-- Prepare indices for gene set testing  
-- Run gene set enrichment tests (cameraPR)  
-- Optionally repeat for filtered gene lists (e.g., hypothalamic genes)
+This targeted analysis is explicitly labeled as **a priori**, and the hypothalamus gene list is clearly separated from data-driven discovery performed in the global analysis.
 
-### 25. Quality Control and Visualization
-**Tasks:**
-- Visualize sample relationships with PCA (optional)  
-- Generate scree plots for variance explained by principal components (optional)  
-- Save results and plots for publication
+***
 
----
+## C. RNA-sequencing analysis: co-expression network and deconvolution
+
+This section of the pipeline is unchanged from the original workflow and operates on normalized bulk RNA-seq expression matrices generated upstream.
+
+### Inputs
+
+- Raw RNA-seq count data or normalized expression values.  
+- Gene length information, if required by specific tools (e.g., certain normalization steps).  
+- Sample metadata with experimental traits and covariates.
+
+### Analysis steps
+
+10. **Setup and data preparation**  
+    - Load count data, gene lengths, and metadata.  
+    - Harmonize sample IDs and ensure consistent trait encoding.
+
+11. **Normalization and quality control**  
+    - Apply DESeq2 VST normalization.  
+    - Perform sample QC and remove outliers as needed.
+
+12. **Network construction and module detection (WGCNA)**  
+    - Construct a weighted gene co-expression network.  
+    - Detect gene modules (clusters of co-expressed genes).
+
+13. **Module–trait relationships**  
+    - Correlate module eigengenes with experimental traits (e.g., condition, sex, phenotypes).  
+    - Identify modules associated with exposure or developmental outcomes.
+
+14. **Gene ontology enrichment**  
+    - Perform GO or pathway enrichment on modules of interest.  
+    - Summarize biological processes and pathways represented by key modules.
+
+15. **Hub gene identification and validation**  
+    - Identify hub genes within selected modules based on connectivity and module membership.  
+    - Optionally validate hub genes using external datasets or literature.
+
+16. **Network visualization**  
+    - Visualize specific modules (e.g., a “green” module) using network plotting tools or Cytoscape-compatible exports.
+
+17. **Cell-type enrichment analysis**  
+    - Test for enrichment of module genes in cell-type–specific signatures to infer cellular context.
+
+18. **Single-cell RNA-seq deconvolution signature preparation**  
+    - Generate bulk deconvolution signatures from single-cell reference data.  
+    - Format signatures for CIBERSORTx or similar deconvolution tools.
+
+19. **Seurat marker gene identification (optional)**  
+    - Identify marker genes from single-cell or single-nucleus datasets using Seurat, when applicable.
+
+20. **CIBERSORTx deconvolution (SLURM)**  
+    - Provide a SLURM batch script and input templates for running CIBERSORTx on HPC.  
+    - Estimate cell-type proportions in bulk RNA-seq samples and integrate these with module-level results.
+
+***
+
+## D. RNA-seq differential expression framework
+
+This section summarizes the general differential expression framework used by the global and targeted RNA-seq analyses.
+
+21. **Setup and data preparation**
+
+- **Inputs**  
+  - Salmon quantification (or equivalent) for all samples.  
+  - Sample metadata with experimental and covariate information.  
+  - Transcript-to-gene mapping files.  
+  - Optional tissue-specific gene lists (e.g., hypothalamus genes) used in targeted analyses.
+- **Tasks**  
+  - Load required R packages.  
+  - Configure the working directory without user-specific hard-coding.  
+  - Assemble metadata and mapping files in the expected format.
+
+22. **Data import and preprocessing**
+
+- **Tools**: `tximport`, `DESeq2`, `limma`, `qusage`, `dplyr`, `tibble`, `readr`, `ggplot2`, `apeglm`, `ggsci`.
+- **Tasks**:
+  - Import RNA-seq quantifications and combine with metadata.  
+  - Construct inputs for DESeq2 and, where appropriate, for downstream model-based analyses.  
+  - Apply optional tissue-specific filtering (e.g., restricting to hypothalamus gene sets) when performing targeted analyses.
+
+23. **Differential expression analysis**
+
+- Construct DESeq2 objects and filter low-count genes.  
+- Fit appropriate models (e.g., `~ sex + condition`).  
+- Compute differential expression contrasts and shrink log2 fold changes for robust ranking and interpretation.
+
+25. **Quality control and visualization**
+
+- Visualize sample relationships via PCA and variance-explained plots.  
+- Generate volcano plots, rank-based visualizations, and module-/pathway-level figures suitable for inclusion in the main text and supplementary materials.  
+- Save all result tables and figures in stable, publication-ready formats (CSV/TSV, PDF/PNG).
+
+***
