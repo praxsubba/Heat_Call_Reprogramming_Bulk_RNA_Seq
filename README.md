@@ -10,8 +10,6 @@ This code base supports three **integrated** RNA-seq analysis streams:
 - A **targeted hypothalamus DESeq2 pipeline** for an a priori gene set.  
 - An **RNA-sequencing co-expression network and deconvolution pipeline**, including WGCNA, module–trait relationships, enrichment, and CIBERSORTx-based deconvolution, which remains unchanged from the original workflow.
 
-The repository is designed to accompany a high-impact journal publication and public data deposition (e.g., GEO/SRA), with emphasis on transparency, reproducibility, and clear separation between global and targeted RNA-seq analyses.
-
 ***
 
 ## A. Global RNA-seq differential expression (DESeq2)
