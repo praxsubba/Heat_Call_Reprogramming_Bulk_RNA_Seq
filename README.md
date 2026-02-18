@@ -38,7 +38,7 @@ This component provides a robust, end-to-end DESeq2 analysis for bulk RNA-seq (m
 ### Core script
 
 - `global_rnaseq_deseq2_pipeline.R`  
-  This script implements the global DESeq2 workflow and is written to be path-agnostic (no user-specific directories) and safe for repeated, automated runs (timestamped, no-overwrite).
+  This script implements the global DESeq2 workflow and is written to be path-agnostic and safe for repeated, automated runs (timestamped, no-overwrite).
 
 ### Analysis steps
 
@@ -77,7 +77,7 @@ All outputs are written to an `outputs/` directory, with automatic timestamping 
 
 ## B. Targeted hypothalamus gene-set DESeq2 analysis
 
-This component provides a focused DESeq2 analysis restricted to a **predefined hypothalamus gene list**, allowing rigorous hypothesis-driven testing within an a priori gene set.[3]
+This component provides a focused DESeq2 analysis restricted to a **predefined hypothalamus gene list**, allowing rigorous hypothesis-driven testing within an a priori gene set.
 
 ### Inputs
 
@@ -86,30 +86,30 @@ In addition to the inputs used for the global pipeline:
 **`DeSeq2_hypothalamus_genes.csv`**
 
 - Single-column CSV with header `gene`, containing hypothalamus candidate genes (symbols or IDs).  
-- This list defines the targeted analysis universe and is derived independently from the bulk RNA-seq data.[3]
+- This list defines the targeted analysis universe and is derived independently from the bulk RNA-seq data.
 
 ### Core script
 
 - `targeted_hypothalamus_deseq2_pipeline.R`  
-  This script reuses the same quantifications and metadata cleaning logic as the global pipeline but restricts analysis to the hypothalamus gene set.[3]
+  This script reuses the same quantifications and metadata cleaning logic as the global pipeline but restricts analysis to the hypothalamus gene set.
 
 ### Analysis steps
 
 **Re-import and metadata harmonization**
 
 - Uses `tximport` to re-import gene-level counts.  
-- Cleans and matches sample IDs exactly as in the global pipeline, enforcing consistent handling of `condition` and `sex`.[3]
+- Cleans and matches sample IDs exactly as in the global pipeline, enforcing consistent handling of `condition` and `sex`.
 
 **Construction of treatment model**
 
 - Builds a `DESeqDataSet` with design `~ sex + condition`.  
-- Filters low-count genes prior to restriction to the hypothalamus list.[3]
+- Filters low-count genes prior to restriction to the hypothalamus list.
 
 **Gene-set restriction and testing**
 
 - Restricts the DESeq2 object to genes present both in the dataset and in `DeSeq2_hypothalamus_genes.csv`.  
 - Performs DESeq2 with `alpha = 0.05`, yielding unshrunken Wald statistics, followed by `apeglm`-based shrinkage of log2 fold changes.  
-- Summarizes the number and direction of significantly altered hypothalamus genes.[3]
+- Summarizes the number and direction of significantly altered hypothalamus genes.
 
 **Outputs for figures and supplements**
 
@@ -117,7 +117,7 @@ In addition to the inputs used for the global pipeline:
 - Volcano plots for the hypothalamus gene set, using combined FDR and fold-change thresholds.  
 - Rank files and combined tables suitable as supplementary resources in the manuscript (unshrunken statistics plus shrunken effect sizes).[3]
 
-This targeted analysis is explicitly labeled as **a priori**, and the hypothalamus gene list is clearly separated from data-driven discovery performed in the global analysis.[3]
+This targeted analysis is explicitly labeled as **a priori**, and the hypothalamus gene list is clearly separated from data-driven discovery performed in the global analysis.
 
 ***
 
@@ -214,7 +214,7 @@ This section summarizes the general differential expression framework used by th
 
 - Import RNA-seq quantifications and combine with metadata.  
 - Construct inputs for DESeq2 and, where appropriate, for downstream model-based analyses.  
-- Apply optional tissue-specific filtering (e.g., restricting to hypothalamus gene sets) when performing targeted analyses.[3]
+- Apply optional tissue-specific filtering (e.g., restricting to hypothalamus gene sets) when performing targeted analyses.
 
 ### Differential expression analysis
 
@@ -226,7 +226,7 @@ This section summarizes the general differential expression framework used by th
 
 - Visualize sample relationships via PCA and variance-explained plots.  
 - Generate volcano plots, rank-based visualizations, and module-/pathway-level figures suitable for inclusion in the main text and supplementary materials.  
-- Save all result tables and figures in stable, publication-ready formats (CSV/TSV, PDF/PNG).[3]
+- Save all result tables and figures in stable, publication-ready formats (CSV/TSV, PDF/PNG).
 
 ***
 
