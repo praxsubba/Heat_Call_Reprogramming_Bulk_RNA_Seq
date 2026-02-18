@@ -115,7 +115,7 @@ In addition to the inputs used for the global pipeline:
 
 - Timestamped CSV and RDS files for unshrunken results and shrunken LFCs.  
 - Volcano plots for the hypothalamus gene set, using combined FDR and fold-change thresholds.  
-- Rank files and combined tables suitable as supplementary resources in the manuscript (unshrunken statistics plus shrunken effect sizes).[3]
+- Rank files and combined tables suitable as supplementary resources in the manuscript (unshrunken statistics plus shrunken effect sizes).
 
 This targeted analysis is explicitly labeled as **a priori**, and the hypothalamus gene list is clearly separated from data-driven discovery performed in the global analysis.
 
@@ -198,7 +198,7 @@ This section summarizes the general differential expression framework used by th
 - Salmon quantification (or equivalent) for all samples.  
 - Sample metadata with experimental and covariate information.  
 - Transcript-to-gene mapping files.  
-- Optional tissue-specific gene lists (e.g., hypothalamus genes) used in targeted analyses.[3]
+- Optional tissue-specific gene lists (e.g., hypothalamus genes) used in targeted analyses.
 
 **Tasks**
 
